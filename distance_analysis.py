@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import os
 import numpy
 import sys
+import xlwt
 
 class DisAna:
     '''printf("pre obj dis.y:%f, cur obj dis.y:%f, pre pre obj dis.y:%f ID:%d\n", tracking_buffer_[tracking_buffer_.size() - 1].distance_.y, cur, tracking_buffer_[tracking_buffer_.size() - 2].distance_.y, id_); '''
@@ -32,8 +33,6 @@ class DisAna:
             m = line.split(' ')
             ids = m[3]
             if (ids not in self.preobjdis.keys()):
-                print(ids in self.preobjdis.keys())
-                #print(preid, self.preobjdis.keys())
                 self.preobjdis[ids] = []
                 self.curobjdis[ids] = []
                 self.prepreobjdis[ids] = []
@@ -43,7 +42,7 @@ class DisAna:
             self.preobjdis[ids].append(pre)
             self.curobjdis[ids].append(cur)
             self.prepreobjdis[ids].append(prepre)
-        index = [int(x) for x in self.preobjdis]
+        index = [int(x) for x in self.preobjdis.keys()]
         index = sorted(index)
         for x in index:
             self.prelist.extend(self.preobjdis[str(x)])
@@ -56,7 +55,7 @@ class DisAna:
 
     def ConfPlt(self):
         x = [x for x in range(len(self.prelist))]
-        diff = [float(self.curlist[i]) - float(self.preprelist[i]) for i in range(len(self.prelist))]
+        diff = [float(self.curlist[i]) - float(self.prelist[i]) for i in range(len(self.prelist))]
         plt.figure(figsize = (8, 4))
         plt.plot(x, self.prelist,":", label="$PreObjectDis$", color="green", linewidth=1)
         plt.plot(x, self.curlist,".", label="$CurObjectDis$", color="blue", linewidth=1)
@@ -67,12 +66,46 @@ class DisAna:
         plt.legend()
         plt.show()
 
+    def to_excel(fpath):
+        #创建workbook和sheet对象
+        workbook = xlwt.Workbook() #注意Workbook的开头W要大写
+        sheet1 = workbook.add_sheet('sheet1',cell_overwrite_ok=True)
+        #向sheet页中写入数据
+        sheet1.write(0,0,'this should overwrite1')
+        sheet1.write(0,1,'aaaaaaaaaaaa')
+        """
+        #-----------使用样式-----------------------------------
+        #初始化样式
+        style = xlwt.XFStyle()
+        #为样式创建字体
+        font = xlwt.Font()
+        font.name = 'Times New Roman'
+        font.bold = True
+        #设置样式的字体
+        style.font = font
+        #使用样式
+        sheet.write(0,1,'some bold Times text',style)
+        """
+        #保存该excel文件,有同名文件时直接覆盖
+        workbook.save('E:\\Code\\Python\\test2.xls')
+        print ('创建excel文件完成！')
+
 if (__name__ == "__main__"):
     d = DisAna(sys.argv[1])
+    workbook = xlwt.Workbook() #注意Workbook的开头W要大写
+    sheet1 = workbook.add_sheet('sheet1',cell_overwrite_ok=True)
+    index = [int(x) for x in d.preobjdis.keys()]
+    index = sorted(index)
+    count=0
+    for x in index:
+        print(x, type(x), len(d.preobjdis[str(x)]))
+        for i in range(len(d.preobjdis[str(x)])):
+            sheet1.write(count,  0, d.preobjdis[str(x)][i])
+            sheet1.write(count,  1, d.prepreobjdis[str(x)][i])
+            sheet1.write(count,  2, d.curobjdis[str(x)][i])
+            sheet1.write(count,  3, x)
+            count += 1
+    print(count)
+    workbook.save('data_analysis.xls')
+    print("done")
     d.ConfPlt()
-    #d1 = DisAna(sys.argv[2])
-    #d1.ConfPlt()
-    #d2 = DisAna(sys.argv[3])
-    #d2.ConfPlt()
-    #d3 = DisAna(sys.argv[4])
-    #d3.ConfPlt()
